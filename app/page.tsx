@@ -24,9 +24,6 @@ import {
   Lightbulb,
   RotateCcw,
   Skull,
-  FileText,
-  BookOpen,
-  Target,
 } from "lucide-react"
 
 // Game types
@@ -43,11 +40,9 @@ interface Challenge {
   language: string
   template: string
   solution: string
-  testCases: Array<{ input: any; expected: any; description?: string; explanation?: string }>
+  testCases: Array<{ input: any; expected: any; description?: string }>
   points: number
   hints: string[]
-  learningObjectives: string[]
-  commonMistakes: string[]
 }
 
 interface TestResult {
@@ -56,7 +51,6 @@ interface TestResult {
   type: "success" | "failure" | "error" | "syntax"
   details?: string
   hint?: string
-  suggestion?: string
 }
 
 interface GameState {
@@ -74,232 +68,89 @@ interface GameState {
   countdown: number | null
 }
 
-// Enhanced challenges with better educational content
+// Enhanced challenges with better error handling
 const challenges: Challenge[] = [
   {
     id: "array-sum",
     title: "Array Sum Algorithm",
-    description:
-      "Calculate the total sum of all numbers in a list. This fundamental operation is used in data analysis, statistics, and many algorithms.",
+    description: "Implement a function that returns the sum of all numbers in a list",
     difficulty: "Junior",
     category: "Algorithm",
     language: "python",
     template: `def array_sum(numbers):
-    """
-    Calculate the sum of all numbers in a list.
-    
-    Args:
-        numbers (list): A list of integers or floats
-        
-    Returns:
-        int/float: The sum of all numbers in the list
-        
-    Examples:
-        array_sum([1, 2, 3]) -> 6
-        array_sum([]) -> 0
-        array_sum([-1, 1]) -> 0
-    """
-    # TODO: Implement the function
-    # Hint: You can use a loop or Python's built-in sum() function
+    # Your code here
+    # Hint: Use a loop or built-in sum() function
     pass`,
     solution: `def array_sum(numbers):
-    """Calculate the sum of all numbers in a list."""
     return sum(numbers)`,
     testCases: [
-      {
-        input: [[1, 2, 3, 4]],
-        expected: 10,
-        description: "Sum of positive integers [1, 2, 3, 4]",
-        explanation: "1 + 2 + 3 + 4 = 10",
-      },
-      {
-        input: [[0, -1, 5]],
-        expected: 4,
-        description: "Sum with negative numbers [0, -1, 5]",
-        explanation: "0 + (-1) + 5 = 4",
-      },
-      {
-        input: [[]],
-        expected: 0,
-        description: "Empty list should return 0",
-        explanation: "Sum of no numbers is 0 by definition",
-      },
-      {
-        input: [[42]],
-        expected: 42,
-        description: "Single element list [42]",
-        explanation: "Sum of one number is the number itself",
-      },
-      {
-        input: [[-5, -10, -3]],
-        expected: -18,
-        description: "All negative numbers [-5, -10, -3]",
-        explanation: "(-5) + (-10) + (-3) = -18",
-      },
+      { input: [[1, 2, 3, 4]], expected: 10, description: "Sum of [1, 2, 3, 4]" },
+      { input: [[0, -1, 5]], expected: 4, description: "Sum with negative numbers" },
+      { input: [[]], expected: 0, description: "Empty list should return 0" },
+      { input: [[42]], expected: 42, description: "Single element list" },
     ],
     points: 100,
     hints: [
-      "Python has a built-in sum() function that can add all numbers in a list",
-      "Alternative: Use a for loop with a running total: total = 0; for num in numbers: total += num",
-      "Remember that sum([]) returns 0, which handles the empty list case automatically",
-      "The sum() function works with both integers and floating-point numbers",
+      "Try using Python's built-in sum() function",
+      "Remember to handle empty lists (they should return 0)",
+      "You can also use a for loop: total = 0; for num in numbers: total += num",
     ],
-    learningObjectives: [
-      "Understand list iteration and aggregation",
-      "Learn about Python's built-in functions",
-      "Practice handling edge cases (empty lists)",
-    ],
-    commonMistakes: ["Forgetting to handle empty lists", "Not returning the result", "Using incorrect variable names"],
   },
   {
     id: "find-bug",
-    title: "Debug the Infinite Loop",
-    description:
-      "Fix a common programming bug that causes an infinite loop. This teaches the importance of loop control variables and debugging skills.",
+    title: "Debug the Loop",
+    description: "Fix the infinite loop in this function",
     difficulty: "Mid",
     category: "Debug",
     language: "python",
     template: `def count_down(n):
-    """
-    Count down from n to 1, printing each number.
-    
-    Args:
-        n (int): Starting number for countdown
-        
-    Returns:
-        str: "Done!" when countdown is complete
-        
-    Examples:
-        count_down(3) prints: 3, 2, 1 and returns "Done!"
-        count_down(0) returns "Done!" immediately
-    """
     while n > 0:
         print(n)
-        # BUG: What's missing here to prevent infinite loop?
+        # Bug: missing decrement
     return "Done!"`,
     solution: `def count_down(n):
-    """Count down from n to 1, printing each number."""
     while n > 0:
         print(n)
-        n -= 1  # Fixed: decrement n to eventually exit the loop
+        n -= 1  # Fixed: added decrement
     return "Done!"`,
     testCases: [
-      {
-        input: [3],
-        expected: "Done!",
-        description: "Countdown from 3",
-        explanation: "Should print 3, 2, 1 then return 'Done!'",
-      },
-      {
-        input: [1],
-        expected: "Done!",
-        description: "Countdown from 1",
-        explanation: "Should print 1 then return 'Done!'",
-      },
-      {
-        input: [0],
-        expected: "Done!",
-        description: "No countdown needed for 0",
-        explanation: "Loop condition n > 0 is false, so skip loop",
-      },
+      { input: [3], expected: "Done!", description: "Countdown from 3" },
+      { input: [1], expected: "Done!", description: "Countdown from 1" },
+      { input: [0], expected: "Done!", description: "No countdown needed" },
     ],
     points: 200,
     hints: [
-      "Look at the while loop condition: 'while n > 0'. What makes this condition eventually become false?",
-      "The variable 'n' needs to change inside the loop, otherwise the condition 'n > 0' will always be true",
-      "Add 'n -= 1' (or 'n = n - 1') inside the while loop to decrement n each iteration",
-      "This is a classic infinite loop bug - the loop control variable isn't being modified",
-    ],
-    learningObjectives: [
-      "Understand loop control variables",
-      "Learn to identify and fix infinite loops",
-      "Practice debugging systematic thinking",
-    ],
-    commonMistakes: [
-      "Not modifying the loop control variable",
-      "Incrementing instead of decrementing",
-      "Placing the decrement outside the loop",
+      "The loop variable 'n' needs to be decremented each iteration",
+      "Add 'n -= 1' or 'n = n - 1' inside the while loop",
+      "Without decrementing n, the condition 'n > 0' will always be true",
     ],
   },
   {
     id: "list-comprehension",
-    title: "List Comprehension Mastery",
-    description:
-      "Create an elegant one-liner using Python's list comprehension to filter and transform data. This is a powerful Pythonic pattern.",
+    title: "List Comprehension Challenge",
+    description: "Create a list of squares for even numbers from 0 to n",
     difficulty: "Senior",
     category: "Algorithm",
     language: "python",
     template: `def even_squares(n):
-    """
-    Generate a list of squares for all even numbers from 0 to n (inclusive).
-    
-    Args:
-        n (int): Upper limit (inclusive)
-        
-    Returns:
-        list: Squares of even numbers from 0 to n
-        
-    Examples:
-        even_squares(5) -> [0, 4, 16]  # squares of 0, 2, 4
-        even_squares(8) -> [0, 4, 16, 36, 64]  # squares of 0, 2, 4, 6, 8
-        even_squares(1) -> [0]  # only 0 is even from 0 to 1
-    """
-    # TODO: Use list comprehension to solve this in one line
-    # Pattern: [expression for item in iterable if condition]
-    # You need: square the number, iterate through range, filter for even
+    # Use list comprehension to create squares of even numbers
+    # from 0 to n (inclusive)
+    # Example: even_squares(5) should return [0, 4, 16]
     pass`,
     solution: `def even_squares(n):
-    """Generate squares of even numbers from 0 to n using list comprehension."""
     return [x**2 for x in range(n+1) if x % 2 == 0]`,
     testCases: [
-      {
-        input: [5],
-        expected: [0, 4, 16],
-        description: "Even squares from 0 to 5: [0², 2², 4²]",
-        explanation: "Even numbers 0,2,4 squared give 0,4,16",
-      },
-      {
-        input: [8],
-        expected: [0, 4, 16, 36, 64],
-        description: "Even squares from 0 to 8: [0², 2², 4², 6², 8²]",
-        explanation: "Even numbers 0,2,4,6,8 squared give 0,4,16,36,64",
-      },
-      {
-        input: [0],
-        expected: [0],
-        description: "Only 0 is even from 0 to 0",
-        explanation: "Range is just [0], 0 is even, 0² = 0",
-      },
-      {
-        input: [1],
-        expected: [0],
-        description: "Only 0 is even from 0 to 1",
-        explanation: "Range is [0,1], only 0 is even, 0² = 0",
-      },
-      {
-        input: [10],
-        expected: [0, 4, 16, 36, 64, 100],
-        description: "Even squares from 0 to 10",
-        explanation: "Even numbers 0,2,4,6,8,10 squared",
-      },
+      { input: [5], expected: [0, 4, 16], description: "Even squares from 0 to 5" },
+      { input: [8], expected: [0, 4, 16, 36, 64], description: "Even squares from 0 to 8" },
+      { input: [0], expected: [0], description: "Only 0 is even from 0 to 0" },
+      { input: [1], expected: [0], description: "Only 0 is even from 0 to 1" },
     ],
     points: 300,
     hints: [
-      "List comprehension syntax: [expression for item in iterable if condition]",
-      "You need three parts: x**2 (square), range(n+1) (numbers 0 to n), x % 2 == 0 (even check)",
-      "Remember range(n+1) to include n in the range (range is exclusive of the end)",
-      "The modulo operator % checks divisibility: x % 2 == 0 means x is even",
-      "Complete solution: [x**2 for x in range(n+1) if x % 2 == 0]",
-    ],
-    learningObjectives: [
-      "Master Python list comprehensions",
-      "Understand filtering with conditions",
-      "Practice mathematical operations in functional style",
-    ],
-    commonMistakes: [
-      "Using range(n) instead of range(n+1)",
-      "Forgetting the condition 'if x % 2 == 0'",
-      "Using x*x instead of x**2 (both work, but ** is more Pythonic)",
+      "Use list comprehension: [expression for item in range if condition]",
+      "Check if a number is even with: x % 2 == 0",
+      "Square a number with: x**2 or x*x",
+      "Remember to include n in the range: range(n+1)",
     ],
   },
 ]
@@ -393,11 +244,9 @@ export default function CodeQuestGame() {
   const [testResults, setTestResults] = useState<TestResult[]>([])
   const [showHints, setShowHints] = useState(false)
   const [currentHintIndex, setCurrentHintIndex] = useState(0)
-  const [showLearningObjectives, setShowLearningObjectives] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [highlightedCode, setHighlightedCode] = useState("")
   const [showEditor, setShowEditor] = useState(true)
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
 
   // Syntax highlighting function
   const highlightPythonSyntax = (code: string) => {
@@ -651,7 +500,6 @@ export default function CodeQuestGame() {
     setTestResults([])
     setShowHints(false)
     setCurrentHintIndex(0)
-    setShowLearningObjectives(false)
   }
 
   // Auto-indent function for the code editor
@@ -708,11 +556,11 @@ export default function CodeQuestGame() {
     }
   }
 
-  // Enhanced code execution with better error handling and feedback
+  // Enhanced code execution with better error handling
   const runCode = () => {
     if (!gameState.currentChallenge) return
 
-    // Basic syntax validation with better error messages
+    // Basic syntax validation
     const codeToTest = userCode.trim()
     if (!codeToTest) {
       setTestResults([
@@ -720,9 +568,8 @@ export default function CodeQuestGame() {
           passed: false,
           message: "No code provided",
           type: "error",
-          details: "The code editor is empty. Please write some code before running tests.",
+          details: "Please write some code before running tests.",
           hint: "Start by implementing the function as described in the challenge.",
-          suggestion: "Look at the function template and replace 'pass' with your implementation.",
         },
       ])
       return
@@ -736,13 +583,12 @@ export default function CodeQuestGame() {
           type: "syntax",
           details: "Your code should contain a function definition starting with 'def'.",
           hint: "Make sure you have a function definition like 'def function_name():'",
-          suggestion: "Keep the existing function signature and just replace the 'pass' statement.",
         },
       ])
       return
     }
 
-    if (codeToTest.includes("pass") && codeToTest.split("\n").length <= 5) {
+    if (codeToTest.includes("pass") && codeToTest.split("\n").length <= 3) {
       setTestResults([
         {
           passed: false,
@@ -750,45 +596,31 @@ export default function CodeQuestGame() {
           type: "error",
           details: "The function still contains 'pass' and appears to be unimplemented.",
           hint: "Replace 'pass' with your actual implementation.",
-          suggestion: "Remove the 'pass' statement and add code that solves the problem.",
         },
       ])
       return
     }
 
     try {
-      // Special handling for specific challenges with better feedback
+      // Special handling for specific challenges
       if (gameState.currentChallenge.id === "find-bug") {
-        // More sophisticated solution check for the countdown function
-        const hasDecrement = codeToTest.includes("n -= 1") || codeToTest.includes("n = n - 1")
-        const hasIncrementMistake = codeToTest.includes("n += 1") || codeToTest.includes("n = n + 1")
-
-        if (hasIncrementMistake) {
-          setTestResults([
-            {
-              passed: false,
-              message: "Incorrect operation detected",
-              type: "failure",
-              details: "You're incrementing 'n' instead of decrementing it. This will make the infinite loop worse!",
-              hint: "You need to make 'n' smaller each iteration, not larger.",
-              suggestion: "Change 'n += 1' to 'n -= 1' to count down instead of up.",
-            },
-          ])
-          return
-        }
-
-        if (hasDecrement) {
-          // Trigger success animation
-          setShowSuccessAnimation(true)
-          setTimeout(() => setShowSuccessAnimation(false), 3000)
-
+        // Direct solution check for the countdown function
+        if (codeToTest.includes("n -= 1") || codeToTest.includes("n = n - 1")) {
           setTestResults([
             {
               passed: true,
-              message: "✅ Bug fixed! All tests passed",
+              message: "Test 1: ✅ Countdown from 3",
               type: "success",
-              details: "You correctly identified and fixed the infinite loop by adding the decrement statement.",
-              suggestion: "Great debugging! The loop now properly decrements 'n' each iteration.",
+            },
+            {
+              passed: true,
+              message: "Test 2: ✅ Countdown from 1",
+              type: "success",
+            },
+            {
+              passed: true,
+              message: "Test 3: ✅ No countdown needed",
+              type: "success",
             },
           ])
 
@@ -804,33 +636,45 @@ export default function CodeQuestGame() {
 
           toast({
             title: "Challenge Solved! 🎉",
-            description: `+${challenge.points} points earned! You fixed the infinite loop.`,
+            description: `+${challenge.points} points earned!`,
           })
 
           // Reset hints
           setShowHints(false)
           setCurrentHintIndex(0)
-          setShowLearningObjectives(false)
           return
         } else {
           setTestResults([
             {
               passed: false,
-              message: "Infinite loop still present",
+              message: "Test 1: ❌ Infinite loop detected",
               type: "failure",
-              details: "The function doesn't modify 'n' inside the loop, so the condition 'n > 0' will always be true.",
-              hint: "Add a statement inside the while loop that decreases the value of 'n'.",
-              suggestion: "Try adding 'n -= 1' inside the while loop, after the print statement.",
+              details: "The function doesn't decrement 'n', causing an infinite loop.",
+              hint: "Add 'n -= 1' inside the while loop to fix the infinite loop.",
+            },
+            {
+              passed: false,
+              message: "Test 2: ❌ Infinite loop detected",
+              type: "failure",
+              details: "The function doesn't decrement 'n', causing an infinite loop.",
+              hint: "Add 'n -= 1' inside the while loop to fix the infinite loop.",
+            },
+            {
+              passed: false,
+              message: "Test 3: ❌ Infinite loop detected",
+              type: "failure",
+              details: "The function doesn't decrement 'n', causing an infinite loop.",
+              hint: "Add 'n -= 1' inside the while loop to fix the infinite loop.",
             },
           ])
           return
         }
       }
 
-      // Enhanced evaluation for other challenges
+      // For other challenges, use the standard evaluation
       const results: TestResult[] = gameState.currentChallenge.testCases.map((testCase, index) => {
         try {
-          // Enhanced Python to JavaScript conversion with better error handling
+          // Enhanced Python to JavaScript conversion
           let jsCode = userCode
             .replace(/def\s+(\w+)\s*\(/g, "function $1(")
             .replace(/:\s*$/gm, " {")
@@ -921,7 +765,6 @@ export default function CodeQuestGame() {
               type: "error",
               details: "The expected function was not found in your code.",
               hint: "Make sure your function name matches the template exactly.",
-              suggestion: "Check that you haven't changed the function name from the template.",
             }
           }
 
@@ -933,14 +776,13 @@ export default function CodeQuestGame() {
           return {
             passed,
             message: passed
-              ? `Test ${index + 1}: ✅ ${testCase.description}`
-              : `Test ${index + 1}: ❌ ${testCase.description}`,
+              ? `Test ${index + 1}: ✅ ${testCase.description || "Passed"}`
+              : `Test ${index + 1}: ❌ ${testCase.description || "Failed"}`,
             type: passed ? "success" : "failure",
             details: passed
-              ? testCase.explanation
+              ? undefined
               : `Expected: ${JSON.stringify(testCase.expected)}, Got: ${JSON.stringify(result_value)}`,
             hint: passed ? undefined : "Check your logic and try again.",
-            suggestion: passed ? undefined : testCase.explanation,
           } as TestResult
         } catch (error) {
           return {
@@ -949,7 +791,6 @@ export default function CodeQuestGame() {
             type: "error",
             details: `${error}`,
             hint: "Check for syntax errors, undefined variables, or logic issues.",
-            suggestion: "Review your code for typos, missing variables, or incorrect syntax.",
           } as TestResult
         }
       })
@@ -961,10 +802,6 @@ export default function CodeQuestGame() {
         // Challenge solved!
         const challenge = gameState.currentChallenge
 
-        // Trigger success animation
-        setShowSuccessAnimation(true)
-        setTimeout(() => setShowSuccessAnimation(false), 3000)
-
         setGameState((prev) => ({
           ...prev,
           currentChallenge: null,
@@ -975,13 +812,12 @@ export default function CodeQuestGame() {
 
         toast({
           title: "Challenge Solved! 🎉",
-          description: `+${challenge.points} points earned! Excellent work!`,
+          description: `+${challenge.points} points earned!`,
         })
 
         // Reset hints
         setShowHints(false)
         setCurrentHintIndex(0)
-        setShowLearningObjectives(false)
       }
     } catch (error) {
       setTestResults([
@@ -991,7 +827,6 @@ export default function CodeQuestGame() {
           type: "syntax",
           details: `${error}`,
           hint: "Check your Python syntax. Make sure indentation is correct and all statements are valid.",
-          suggestion: "Look for missing colons, incorrect indentation, or typos in your code.",
         },
       ])
     }
@@ -1003,7 +838,6 @@ export default function CodeQuestGame() {
     setTestResults([])
     setShowHints(false)
     setCurrentHintIndex(0)
-    setShowLearningObjectives(false)
   }
 
   const showNextHint = () => {
@@ -1019,7 +853,7 @@ export default function CodeQuestGame() {
 
   const getCellType = (x: number, y: number): CellType => {
     if (gameState.snake.some((s) => s.x === x && s.y === y)) return "snake"
-    if (gameState.food.some((f) => f.x === x && f.y === y)) return "food" // Fixed: changed s.y to f.y
+    if (gameState.food.some((f) => f.x === x && f.y === y)) return "food"
     if (gameState.challenges.some((c) => c.x === x && c.y === y)) return "challenge"
     if (gameState.bugs.some((b) => b.x === x && b.y === y)) return "bug"
     return "empty"
@@ -1140,27 +974,6 @@ export default function CodeQuestGame() {
         </div>
       )}
 
-      {/* Success Animation Overlay */}
-      {showSuccessAnimation && (
-        <div className="fixed inset-0 bg-emerald-500/20 flex items-center justify-center z-50 backdrop-blur-sm animate-pulse">
-          <div className="text-center">
-            <div className="text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-yellow-400 to-emerald-400 drop-shadow-[0_0_30px_rgba(52,211,153,0.8)] animate-bounce">
-              SUCCESS!
-            </div>
-            <div className="text-2xl text-emerald-200 mt-4 font-mono animate-pulse">🎉 CHALLENGE COMPLETED! 🎉</div>
-            <div className="flex justify-center mt-6 space-x-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-4 h-4 bg-emerald-400 rounded-full animate-bounce shadow-[0_0_15px_rgba(52,211,153,0.8)]"
-                  style={{ animationDelay: `${i * 0.1}s` }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="max-w-5xl mx-auto relative z-10">
         {/* Header */}
         <div className="mb-3 text-center">
@@ -1195,7 +1008,7 @@ export default function CodeQuestGame() {
                   onClick={resetGame}
                   variant="outline"
                   size="icon"
-                  className="border-indigo-500/50 text-indigo-100 hover:bg-indigo-500/20 hover:text-white"
+                  className="border-indigo-500/50 text-indigo-100 hover:bg-indigo-500/20"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </Button>
@@ -1300,8 +1113,8 @@ export default function CodeQuestGame() {
                   {/* Code Editor */}
                   <div className="relative">
                     <div className="absolute left-0 top-0 bottom-0 w-8 bg-slate-900 border-r border-slate-700 flex flex-col items-center pt-1 text-xs text-slate-500 font-mono">
-                      {Array.from({ length: 12 }).map((_, i) => (
-                        <div key={i} className="h-4 w-full text-center leading-4">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="h-6 w-full text-center">
                           {i + 1}
                         </div>
                       ))}
@@ -1313,7 +1126,7 @@ export default function CodeQuestGame() {
                       value={userCode || gameState.currentChallenge.template}
                       onChange={(e) => setUserCode(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      className={`font-mono text-sm bg-slate-800/80 border-emerald-500/50 h-[240px] text-emerald-100 shadow-[inset_0_0_10px_rgba(52,211,153,0.1)] pl-10 resize-none ${showEditor ? "block" : "absolute opacity-0 pointer-events-none"}`}
+                      className={`font-mono text-sm bg-slate-800/80 border-emerald-500/50 h-[200px] text-emerald-100 shadow-[inset_0_0_10px_rgba(52,211,153,0.1)] pl-10 resize-none ${showEditor ? "block" : "absolute opacity-0 pointer-events-none"}`}
                       placeholder="Write your code here..."
                       spellCheck="false"
                     />
@@ -1321,7 +1134,7 @@ export default function CodeQuestGame() {
                     {/* Syntax highlighted display */}
                     {!showEditor && (
                       <div
-                        className="font-mono text-sm bg-slate-800/80 border border-emerald-500/50 h-[240px] text-emerald-100 shadow-[inset_0_0_10px_rgba(52,211,153,0.1)] pl-10 pr-3 py-2 overflow-auto"
+                        className="font-mono text-sm bg-slate-800/80 border border-emerald-500/50 h-[200px] text-emerald-100 shadow-[inset_0_0_10px_rgba(52,211,153,0.1)] pl-10 pr-3 py-2 overflow-auto"
                         onClick={() => {
                           setShowEditor(true)
                           setTimeout(() => {
@@ -1338,6 +1151,12 @@ export default function CodeQuestGame() {
                   <div className="flex gap-2">
                     <Button
                       onClick={runCode}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          runCode()
+                        }
+                      }}
                       className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white shadow-[0_0_15px_rgba(52,211,153,0.5)] border border-emerald-400/50"
                     >
                       <Zap className="w-4 h-4 mr-2" />
@@ -1346,58 +1165,19 @@ export default function CodeQuestGame() {
                     <Button
                       onClick={showNextHint}
                       variant="outline"
-                      className="border-violet-500/50 text-violet-200 hover:bg-violet-500/20 hover:text-violet-100"
+                      className="border-violet-500/50 text-violet-100 hover:bg-violet-500/20"
                     >
                       <Lightbulb className="w-4 h-4 mr-2" />
                       HINT
                     </Button>
                     <Button
-                      onClick={() => setShowLearningObjectives(!showLearningObjectives)}
-                      variant="outline"
-                      className="border-blue-500/50 text-blue-200 hover:bg-blue-500/20 hover:text-blue-100"
-                    >
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      LEARN
-                    </Button>
-                    <Button
                       onClick={closeChallenge}
                       variant="outline"
-                      className="border-orange-500/50 text-orange-200 hover:bg-orange-500/20 hover:text-orange-100"
+                      className="border-orange-500/50 text-orange-100 hover:bg-orange-500/20"
                     >
                       SKIP
                     </Button>
                   </div>
-
-                  {/* Learning Objectives Section */}
-                  {showLearningObjectives && gameState.currentChallenge && (
-                    <div className="bg-blue-900/30 border border-blue-500/50 rounded p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Target className="w-4 h-4 text-blue-400" />
-                        <span className="text-blue-100 font-mono text-sm">LEARNING OBJECTIVES</span>
-                      </div>
-                      <ul className="text-blue-200 text-xs space-y-1">
-                        {gameState.currentChallenge.learningObjectives.map((objective, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-blue-400 mt-0.5">•</span>
-                            <span>{objective}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {gameState.currentChallenge.commonMistakes.length > 0 && (
-                        <div className="mt-3 pt-2 border-t border-blue-500/30">
-                          <div className="text-blue-100 font-mono text-xs mb-1">COMMON MISTAKES TO AVOID:</div>
-                          <ul className="text-blue-200 text-xs space-y-1">
-                            {gameState.currentChallenge.commonMistakes.map((mistake, index) => (
-                              <li key={index} className="flex items-start gap-2">
-                                <span className="text-rose-400 mt-0.5">⚠</span>
-                                <span>{mistake}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {/* Hints Section */}
                   {showHints && gameState.currentChallenge && (
@@ -1426,28 +1206,15 @@ export default function CodeQuestGame() {
                       <h4 className="text-emerald-100 font-mono text-sm">TEST RESULTS</h4>
                       {testResults.map((result, index) => (
                         <div key={index} className="space-y-1">
-                          <div className={`p-3 rounded border font-mono text-xs ${getTestResultStyle(result.type)}`}>
-                            <div className="flex items-start gap-2 mb-2">
-                              {getTestResultIcon(result.type)}
-                              <div className="flex-1">
-                                <div className="font-medium">{result.message}</div>
-                              </div>
+                          <div
+                            className={`p-2 rounded border font-mono text-xs flex items-start gap-2 ${getTestResultStyle(result.type)}`}
+                          >
+                            {getTestResultIcon(result.type)}
+                            <div className="flex-1">
+                              <div>{result.message}</div>
+                              {result.details && <div className="mt-1 text-xs opacity-80">{result.details}</div>}
+                              {result.hint && <div className="mt-1 text-xs italic opacity-70">💡 {result.hint}</div>}
                             </div>
-                            {result.details && (
-                              <div className="mt-2 text-xs opacity-90 bg-black/20 p-2 rounded">
-                                <strong>Details:</strong> {result.details}
-                              </div>
-                            )}
-                            {result.suggestion && (
-                              <div className="mt-2 text-xs opacity-80 bg-black/10 p-2 rounded">
-                                <strong>💡 Suggestion:</strong> {result.suggestion}
-                              </div>
-                            )}
-                            {result.hint && (
-                              <div className="mt-2 text-xs italic opacity-70">
-                                <strong>Hint:</strong> {result.hint}
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -1511,21 +1278,6 @@ export default function CodeQuestGame() {
                 </CardContent>
               </Card>
             )}
-          </div>
-        </div>
-        {/* Footer with Documentation Link */}
-        <div className="mt-6 text-center border-t border-emerald-500/20 pt-4">
-          <a
-            href="https://github.com/nseldeib/v0-code-snake-game/blob/main/README.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center text-sm text-violet-300 hover:text-violet-100 transition-colors hover:underline"
-          >
-            <FileText className="w-3 h-3 mr-1" />
-            View Complete Documentation & Game Guide
-          </a>
-          <div className="text-xs text-slate-400 mt-1">
-            Built with ❤️ using v0 by Vercel • Ready Player One? Let's code! 🚀
           </div>
         </div>
       </div>
