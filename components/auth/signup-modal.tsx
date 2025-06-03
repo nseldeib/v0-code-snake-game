@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,83 +26,72 @@ export function SignupModal({ open, onOpenChange, onSuccess }: SignupModalProps)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  // Clear form and errors when modal opens
+  useEffect(() => {
+    if (open) {
+      setError("")
+      setEmail("")
+      setUsername("")
+      setPassword("")
+    }
+  }, [open])
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
 
     try {
-      // First check if username is available
-      const { data: existingUser, error: checkError } = await supabase
-        .from("users")
-        .select("username")
-        .eq("username", username)
-        .single()
-
-      if (checkError && checkError.code !== "PGRST116") {
-        console.error("Error checking username:", checkError)
-        setError("Error checking username availability")
-        setLoading(false)
-        return
-      }
-
-      if (existingUser) {
-        setError("Username already taken")
-        setLoading(false)
-        return
-      }
-
-      // Sign up with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            username: username, // Store username in auth metadata as well
-          },
+      // Use our server-side API route for signup
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          email,
+          password,
+          username,
+        }),
       })
 
-      if (authError) {
-        console.error("Auth error:", authError)
-        setError(authError.message)
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Handle rate limiting error specifically
+        if (data.error && data.error.includes("For security purposes, you can only request this after")) {
+          const match = data.error.match(/after (\d+) seconds/)
+          const seconds = match ? match[1] : "a few"
+          setError(`Please wait ${seconds} seconds before trying again. This is a security measure to prevent spam.`)
+        } else if (data.error && data.error.includes("User already registered")) {
+          setError("An account with this email already exists. Try logging in instead.")
+        } else {
+          setError(data.error || "Failed to create account")
+        }
         setLoading(false)
         return
       }
 
-      if (authData.user) {
-        console.log("User created in auth:", authData.user.id)
+      console.log("User created successfully:", data.user)
 
-        // Create user record in our users table
-        const { error: dbError } = await supabase.from("users").insert({
-          id: authData.user.id,
-          email,
-          username,
-          high_score: 0,
-          challenges_completed: [],
-        })
+      // Show success toast
+      toast({
+        title: "Welcome to Code Quest! 🎉",
+        description: `Account created successfully! You're now logged in as ${username}.`,
+      })
 
-        if (dbError) {
-          console.error("Database error:", dbError)
-          setError("Failed to create user profile: " + dbError.message)
-          setLoading(false)
-          return
-        }
+      // Refresh the auth state
+      const { data: session } = await supabase.auth.getSession()
 
-        console.log("User profile created successfully")
-
-        // Show success toast
-        toast({
-          title: "Welcome to Code Quest! 🎉",
-          description: `Account created successfully! You're now logged in as ${username}.`,
-        })
-
-        onSuccess()
-        onOpenChange(false)
-        setEmail("")
-        setUsername("")
-        setPassword("")
+      if (session) {
+        console.log("Session established:", session)
       }
+
+      onSuccess()
+      onOpenChange(false)
+      setEmail("")
+      setUsername("")
+      setPassword("")
     } catch (err) {
       console.error("Unexpected error:", err)
       setError("An unexpected error occurred")
