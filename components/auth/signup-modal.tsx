@@ -42,59 +42,104 @@ export function SignupModal({ open, onOpenChange, onSuccess }: SignupModalProps)
     setError("")
 
     try {
-      // Use our server-side API route for signup
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          username,
-        }),
-      })
+      console.log("Starting signup process...")
 
-      const data = await response.json()
+      // First check if username is available
+      const { data: existingUser, error: checkError } = await supabase
+        .from("users")
+        .select("username")
+        .eq("username", username)
+        .single()
 
-      if (!response.ok) {
-        // Handle rate limiting error specifically
-        if (data.error && data.error.includes("For security purposes, you can only request this after")) {
-          const match = data.error.match(/after (\d+) seconds/)
-          const seconds = match ? match[1] : "a few"
-          setError(`Please wait ${seconds} seconds before trying again. This is a security measure to prevent spam.`)
-        } else if (data.error && data.error.includes("User already registered")) {
-          setError("An account with this email already exists. Try logging in instead.")
-        } else {
-          setError(data.error || "Failed to create account")
-        }
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("Error checking username:", checkError)
+        setError("Error checking username availability")
         setLoading(false)
         return
       }
 
-      console.log("User created successfully:", data.user)
-
-      // Show success toast
-      toast({
-        title: "Welcome to Code Quest! 🎉",
-        description: `Account created successfully! You're now logged in as ${username}.`,
-      })
-
-      // Refresh the auth state
-      const { data: session } = await supabase.auth.getSession()
-
-      if (session) {
-        console.log("Session established:", session)
+      if (existingUser) {
+        setError("Username already taken")
+        setLoading(false)
+        return
       }
 
-      onSuccess()
-      onOpenChange(false)
-      setEmail("")
-      setUsername("")
-      setPassword("")
+      console.log("Username available, proceeding with auth signup...")
+
+      // Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username,
+          },
+        },
+      })
+
+      if (authError) {
+        console.error("Auth error:", authError)
+
+        // Handle rate limiting error specifically
+        if (authError.message.includes("For security purposes, you can only request this after")) {
+          const match = authError.message.match(/after (\d+) seconds/)
+          const seconds = match ? match[1] : "a few"
+          setError(`Please wait ${seconds} seconds before trying again. This is a security measure to prevent spam.`)
+        } else if (authError.message.includes("User already registered")) {
+          setError("An account with this email already exists. Try logging in instead.")
+        } else {
+          setError(authError.message)
+        }
+
+        setLoading(false)
+        return
+      }
+
+      if (authData.user) {
+        console.log("Auth user created:", authData.user.id)
+
+        // Wait a moment for the auth session to be established
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        // Create user record in our users table
+        console.log("Inserting user into database...")
+        const { data: insertData, error: dbError } = await supabase
+          .from("users")
+          .insert({
+            id: authData.user.id,
+            email,
+            username,
+            high_score: 0,
+            challenges_completed: [],
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+
+        if (dbError) {
+          console.error("Database error:", dbError)
+          setError("Failed to create user profile: " + dbError.message)
+          setLoading(false)
+          return
+        }
+
+        console.log("User profile created successfully:", insertData)
+
+        // Show success toast
+        toast({
+          title: "Welcome to Code Quest! 🎉",
+          description: `Account created successfully! You're now logged in as ${username}.`,
+        })
+
+        onSuccess()
+        onOpenChange(false)
+        setEmail("")
+        setUsername("")
+        setPassword("")
+      }
     } catch (err) {
       console.error("Unexpected error:", err)
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred: " + String(err))
     } finally {
       setLoading(false)
     }

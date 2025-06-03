@@ -729,22 +729,34 @@ export default function CodeQuestGame() {
     try {
       console.log("Fetching profile for user:", userId)
 
-      const { data, error } = await supabase.from("users").select("*").eq("id", userId).single()
+      const { data, error, count } = await supabase.from("users").select("*", { count: "exact" }).eq("id", userId)
 
       if (error) {
         console.error("Error fetching user profile:", error)
         if (error.code === "PGRST116") {
           // User doesn't exist in our users table
-          console.log("User not found in users table")
+          console.log("User not found in users table, this might be a new signup")
+          setAuthLoading(false)
+          return
         } else {
           toast({
             title: "Profile Error",
             description: "Failed to load user profile. Please try refreshing the page.",
           })
         }
-      } else if (data) {
-        console.log("User profile loaded:", data)
-        setUser(data)
+      } else if (data && data.length > 0) {
+        if (data.length > 1) {
+          console.warn("Multiple users found with same ID:", data.length)
+          // Use the first one but log the issue
+          setUser(data[0])
+        } else {
+          console.log("User profile loaded:", data[0])
+          setUser(data[0])
+        }
+      } else {
+        console.log("No user profile found for ID:", userId)
+        // User exists in auth but not in our users table
+        // This can happen if signup didn't complete properly
       }
     } catch (err) {
       console.error("Unexpected error fetching profile:", err)

@@ -31,14 +31,23 @@ export function LoginModal({ open, onOpenChange, onSuccess }: LoginModalProps) {
     setError("")
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login for:", email)
+
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
+        console.error("Login error:", error)
         setError(error.message)
-      } else {
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        console.log("Login successful:", data.user.id)
+
         // Show success toast
         toast({
           title: "Welcome back! 🚀",
@@ -49,8 +58,12 @@ export function LoginModal({ open, onOpenChange, onSuccess }: LoginModalProps) {
         onOpenChange(false)
         setEmail("")
         setPassword("")
+      } else {
+        console.error("No user returned from login")
+        setError("Login failed - no user data returned")
       }
     } catch (err) {
+      console.error("Unexpected login error:", err)
       setError("An unexpected error occurred")
     } finally {
       setLoading(false)
