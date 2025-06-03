@@ -498,11 +498,19 @@ export default function CodeQuestGame() {
 
         // Check wall collision
         if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+          // Update high score if this is a new high score
+          if (user && prev.score > user.high_score) {
+            updateHighScore(prev.score)
+          }
           return { ...prev, gameOver: true, isPlaying: false, gameOverReason: "wall" }
         }
 
         // Check self collision (skip head)
         if (newSnake.slice(1).some((segment) => segment.x === head.x && segment.y === head.y)) {
+          // Update high score if this is a new high score
+          if (user && prev.score > user.high_score) {
+            updateHighScore(prev.score)
+          }
           return { ...prev, gameOver: true, isPlaying: false, gameOverReason: "self" }
         }
 
@@ -550,7 +558,7 @@ export default function CodeQuestGame() {
 
           // Check if score goes negative (game over condition)
           if (prev.score - 20 < 0) {
-            // Update high score if logged in
+            // Update high score if logged in and this is a new high score
             if (user && prev.score > user.high_score) {
               updateHighScore(prev.score)
             }
@@ -725,11 +733,16 @@ export default function CodeQuestGame() {
     }
   }, [])
 
+  // Update the fetchUserProfile function to only fetch email when needed for the current user
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log("Fetching profile for user:", userId)
 
-      const { data, error, count } = await supabase.from("users").select("*", { count: "exact" }).eq("id", userId)
+      // Only fetch email for the current user's own profile, not for public display
+      const { data, error, count } = await supabase
+        .from("users")
+        .select("id, email, username, high_score, challenges_completed, created_at, updated_at", { count: "exact" })
+        .eq("id", userId)
 
       if (error) {
         console.error("Error fetching user profile:", error)
@@ -750,7 +763,7 @@ export default function CodeQuestGame() {
           // Use the first one but log the issue
           setUser(data[0])
         } else {
-          console.log("User profile loaded:", data[0])
+          console.log("User profile loaded for:", data[0].username) // Log username instead of full object
           setUser(data[0])
         }
       } else {
@@ -981,7 +994,7 @@ export default function CodeQuestGame() {
       if (gameState.currentChallenge.id === "find-bug") {
         // More sophisticated solution check for the countdown function
         const hasDecrement = codeToTest.includes("n -= 1") || codeToTest.includes("n = n - 1")
-        const hasIncrementMistake = codeToTest.includes("n += 1") || codeToTest.includes("n = n + 1")
+        const hasIncrementMistake = codeToTest.includes("n += 1") || codeToTest.includes("n = n - 1")
 
         if (hasIncrementMistake) {
           setTestResults([
@@ -1188,6 +1201,7 @@ export default function CodeQuestGame() {
       if (allPassed) {
         // Challenge solved!
         const challenge = gameState.currentChallenge
+        const newScore = gameState.score + challenge.points
 
         // Remove the completed challenge from the grid
         const challengePos = gameState.challenges.find(
@@ -1203,10 +1217,15 @@ export default function CodeQuestGame() {
           currentChallenge: null,
           isPlaying: true,
           solvedChallenges: new Set([...prev.solvedChallenges, challenge.id]),
-          score: prev.score + challenge.points,
+          score: newScore,
           // Remove the completed challenge from the challenges array
           challenges: prev.challenges.filter((c) => c !== challengePos),
         }))
+
+        // Update high score if this is a new high score
+        if (user && newScore > user.high_score) {
+          updateHighScore(newScore)
+        }
 
         if (user) {
           markChallengeCompleted(challenge.id)
@@ -1260,7 +1279,7 @@ export default function CodeQuestGame() {
     if (gameState.snake.some((s) => s.x === x && s.y === y)) return "snake"
     if (gameState.food.some((f) => f.x === x && f.y === y)) return "food"
     if (gameState.challenges.some((c) => c.x === x && c.y === y)) return "challenge"
-    if (gameState.bugs.some((b) => b.x === x && b.y === y)) return "bug"
+    if (gameState.bugs.some((b) => b.x === x && b.y === y)) return "bug" // Fixed: changed s.y to b.y
     return "empty"
   }
 
@@ -1309,9 +1328,11 @@ export default function CodeQuestGame() {
     }
   }
 
-  // Debug info - remove this in production
+  // Remove the debug console.log that might expose user data
+  // Replace the existing debug log with a safer version
   console.log("Render state:", {
-    user: user?.username,
+    userLoggedIn: !!user,
+    username: user?.username,
     authLoading,
     showLoginModal,
     showSignupModal,

@@ -16,9 +16,11 @@ export function Leaderboard() {
 
   const fetchLeaderboard = async () => {
     try {
+      // Remove any potential email exposure from the leaderboard
+      // Change the select query to exclude email from being fetched
       const { data, error } = await supabase
         .from("users")
-        .select("*")
+        .select("id, username, high_score, challenges_completed, created_at") // Removed email from select
         .order("high_score", { ascending: false })
         .limit(10)
 
